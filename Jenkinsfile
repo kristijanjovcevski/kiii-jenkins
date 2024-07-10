@@ -1,18 +1,35 @@
-node {
-    def app
+pipeline {
+    agent any
 
-    stage('Clone repository') {
-        checkout scm
+    environment {
+        registry = 'https://registry.hub.docker.com'
+        dockerCredential = 'dockerhub'
     }
 
-    stage('Build image') {
-        app = docker.build("kristijanjovcevski/kiii-jenkins")
-    }
+    stages {
+        stage('Clone repository') {
+            steps {
+                checkout scm
+            }
+        }
 
-    stage('Push image') {
-        docker.withRegistry('https://registry.hub.docker.com', 'dockerhub') {
-            app.push("${env.BRANCH_NAME}-${env.BUILD_NUMBER}")
-            app.push("${env.BRANCH_NAME}-latest")
+        stage('Build image') {
+            steps {
+                script {
+                    def app = docker.build("kristijanjovcevski/kiii-jenkins")
+                }
+            }
+        }
+
+        stage('Push image') {
+            steps {
+                script {
+                    docker.withRegistry(registry, dockerCredential) {
+                        app.push("${env.BRANCH_NAME}-${env.BUILD_NUMBER}")
+                        app.push("${env.BRANCH_NAME}-latest")
+                    }
+                }
+            }
         }
     }
 }

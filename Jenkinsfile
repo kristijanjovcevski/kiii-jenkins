@@ -1,35 +1,16 @@
-pipeline {
-    agent any
-
-    environment {
-        registry = 'https://registry.hub.docker.com'
-        dockerCredential = 'dockerhub'
+node {
+    def app
+    stage('Clone repository') {
+        checkout scm
     }
-
-    stages {
-        stage('Clone repository') {
-            steps {
-                checkout scm
-            }
-        }
-
-        stage('Build image') {
-            steps {
-                script {
-                    def app = docker.build("kristijanjovcevski/kiii-jenkins")
-                }
-            }
-        }
-
-        stage('Push image') {
-            steps {
-                script {
-                    docker.withRegistry(registry, dockerCredential) {
-                        app.push("${env.BRANCH_NAME}-${env.BUILD_NUMBER}")
-                        app.push("${env.BRANCH_NAME}-latest")
-                    }
-                }
-            }
+    stage('Build image') {
+        app = docker.build("kristijanjovcevski/kiii-jenkins")
+    }
+    stage('Push image') {   
+        docker.withRegistry('https://registry.hub.docker.com', 'dockerhub') {
+            app.push("${env.BRANCH_NAME}-${env.BUILD_NUMBER}")
+            app.push("${env.BRANCH_NAME}-latest")
+            // signal the orchestrator that there is a new version
         }
     }
 }

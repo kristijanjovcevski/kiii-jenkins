@@ -7,6 +7,5 @@ node {
         app = docker.build("thepublisher/kiii-jenkins")
     }
 
-}
 
 }
